@@ -1,0 +1,93 @@
+CODE  SEGMENT 
+ ASSUME CS:CODE
+
+IOCON	 EQU 0B000H
+
+PA EQU 8000H  ; (A口)
+PB EQU 8002H  ; (B口)
+PC EQU 8006H    ;(控制端口)
+
+START:
+MOV DX, PC
+MOV  AL, 10010010B;(控制字)
+OUT  DX,AL
+MOV BH,01H
+IN_PORT: 
+				MOV DX,PA
+				IN  AL,DX;读A口状态
+				MOV AH,AL
+
+				MOV DX,PB
+				IN AL,DX
+				XCHG  AH,AL
+CMP_A:
+				CMP AL ,0FEH
+				JE CHANGE
+
+				CMP AL,0FCH;
+				JE CHANGE1
+
+				CMP AL,0F8H;
+				JE CHANGE2
+
+				CMP AL,0F0H;
+				JE CHANGE3
+
+				CMP AL,0E0H;
+				JE CHANGE4			
+
+CHANGE4:
+				MOV AL,0FFH
+				JMP CHANGEP
+CHANGE:
+				MOV AL ,33H
+				JMP CHANGEP
+CHANGE1:
+				MOV AL,66H
+				JMP CHANGEP
+CHANGE2:
+				MOV AL,99H
+				JMP CHANGEP
+CHANGE3:
+				MOV AL,0CCH
+				JMP CHANGEP
+CHANGEP:
+				CMP AH,0FEH;(控制频率，使得频率增大)
+				JE  CHANGE5
+
+				CMP AH,0FDH;(控制频率，使得频率减小)
+				JE  CHANGE6
+				JMP TRIANGLE
+CHANGE5 :
+				MOV BH ,03H
+				JMP TRIANGLE
+CHANGE6:
+				MOV BH , 01H 
+				JMP TRIANGLE
+TRIANGLE:
+		MOV BL,AL
+		MOV AL,00H
+			OUTUP:  
+					MOV DX,IOCON
+					OUT DX,AL
+					ADD AL,BH
+					NOP
+					NOP
+					NOP
+					CMP AL,BL
+					JNE OUTUP       
+			OUTDOWN:
+					SUB  AL,BH
+					NOP
+					NOP
+					NOP
+					OUT DX,AL
+					CMP AL,00H
+					JE IN_PORT
+					JMP OUTDOWN
+
+CODE    ENDS
+        END START
+
+
+	    
